@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_hash - Cryptographic Hashing for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_hash</h1>
+        <p class="tagline">Cryptographic Hashing for Eiffel</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#quickstart">Quick Start</a></li>
+            <li><a href="#algorithms">Algorithms</a></li>
+            <li><a href="api/simple_hash.html">API Reference</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="features">
+            <h2>Features</h2>
+            <ul>
+                <li><strong>SHA-256</strong> - Secure hash, 256-bit output (FIPS 180-4)</li>
+                <li><strong>HMAC-SHA256</strong> - Keyed-hash message authentication (RFC 2104)</li>
+                <li><strong>MD5</strong> - Legacy hash for checksums (not for security)</li>
+                <li><strong>Design by Contract</strong> - Full preconditions and postconditions</li>
+                <li><strong>Pure Eiffel</strong> - No external dependencies</li>
+            </ul>
+        </section>
+
+        <section id="quickstart">
+            <h2>Quick Start</h2>
+
+            <h3>Installation</h3>
+            <p>Add to your ECF:</p>
+            <pre><code>&lt;library name="simple_hash" location="$SIMPLE_HASH\simple_hash.ecf"/&gt;</code></pre>
+
+            <h3>SHA-256 Hashing</h3>
+            <pre><code>local
+    hasher: SIMPLE_HASH
+    digest: STRING
+do
+    create hasher.make
+
+    -- Hash a string
+    digest := hasher.sha256 ("Hello, World!")
+    -- Result: "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+end</code></pre>
+
+            <h3>HMAC-SHA256 (for JWT, API signatures)</h3>
+            <pre><code>local
+    hasher: SIMPLE_HASH
+    signature: STRING
+do
+    create hasher.make
+
+    -- Create keyed hash
+    signature := hasher.hmac_sha256 ("secret-key", "message to sign")
+    -- 64-character hex string
+end</code></pre>
+
+            <h3>MD5 (Legacy checksums only)</h3>
+            <pre><code>local
+    hasher: SIMPLE_HASH
+    checksum: STRING
+do
+    create hasher.make
+
+    -- WARNING: MD5 is cryptographically broken
+    -- Use only for checksums, never for security
+    checksum := hasher.md5 ("file contents")
+end</code></pre>
+        </section>
+
+        <section id="algorithms">
+            <h2>Algorithm Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Output Size</th>
+                        <th>Security</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SHA-256</td>
+                        <td>256 bits (64 hex chars)</td>
+                        <td>Secure</td>
+                        <td>Passwords, signatures, integrity</td>
+                    </tr>
+                    <tr>
+                        <td>HMAC-SHA256</td>
+                        <td>256 bits (64 hex chars)</td>
+                        <td>Secure</td>
+                        <td>JWT signatures, API auth, MACs</td>
+                    </tr>
+                    <tr>
+                        <td>MD5</td>
+                        <td>128 bits (32 hex chars)</td>
+                        <td>Broken</td>
+                        <td>Checksums only (legacy)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="usecases">
+            <h2>Use Cases</h2>
+            <ul>
+                <li><strong>JWT Tokens</strong> - HMAC-SHA256 for HS256 signatures</li>
+                <li><strong>Password Hashing</strong> - SHA-256 with salt (prefer bcrypt for production)</li>
+                <li><strong>API Authentication</strong> - HMAC signatures for request verification</li>
+                <li><strong>Data Integrity</strong> - SHA-256 checksums for file verification</li>
+                <li><strong>Content Addressing</strong> - Hash-based content identifiers</li>
+            </ul>
+        </section>
+
+        <section id="specs">
+            <h2>Specifications</h2>
+            <ul>
+                <li><a href="https://csrc.nist.gov/publications/detail/fips/180/4/final">FIPS 180-4</a> - Secure Hash Standard (SHA-256)</li>
+                <li><a href="https://datatracker.ietf.org/doc/html/rfc2104">RFC 2104</a> - HMAC: Keyed-Hashing for Message Authentication</li>
+                <li><a href="https://datatracker.ietf.org/doc/html/rfc1321">RFC 1321</a> - The MD5 Message-Digest Algorithm</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="api/simple_hash.html">API Reference</a> |
+            <a href="https://github.com/ljr1981/simple_hash">GitHub</a>
+        </p>
+        <p class="copyright">
+            Copyright &copy; 2024-2025 Larry Rix. MIT License.
+        </p>
+    </footer>
+</body>
+</html>

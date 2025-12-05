@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMPLE_HASH API Reference</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/png" href="../images/logo.png">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="../images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>SIMPLE_HASH</h1>
+        <p class="tagline">API Reference</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="#sha256">SHA-256</a></li>
+            <li><a href="#hmac">HMAC-SHA256</a></li>
+            <li><a href="#md5">MD5</a></li>
+            <li><a href="#utilities">Utilities</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Class Overview</h2>
+            <p>
+                <code>SIMPLE_HASH</code> provides cryptographic hashing functions for Eiffel applications.
+                All hash outputs are available as both raw bytes and hexadecimal strings.
+            </p>
+
+            <div class="api-section">
+                <h3>Creation</h3>
+                <div class="signature">create hasher.make</div>
+                <p>Initialize the hasher.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="ensure">ensure: buffer_ready: working_buffer.count = 64</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sha256">
+            <h2>SHA-256 Features</h2>
+            <p>SHA-256 produces a 256-bit (32-byte) hash, output as 64 hexadecimal characters.</p>
+
+            <div class="api-section">
+                <h3>sha256 (a_input: STRING): STRING</h3>
+                <div class="signature">digest := hasher.sha256 ("Hello, World!")</div>
+                <p>Compute SHA-256 hash and return as lowercase hex string (64 characters).</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: input_not_void: a_input /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 64</div>
+                    <div class="ensure">ensure: lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>sha256_bytes (a_input: STRING): ARRAY [NATURAL_8]</h3>
+                <div class="signature">bytes := hasher.sha256_bytes ("Hello, World!")</div>
+                <p>Compute SHA-256 hash and return as 32-byte array.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: input_not_void: a_input /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 32</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="hmac">
+            <h2>HMAC-SHA256 Features</h2>
+            <p>HMAC-SHA256 creates a keyed hash for message authentication. Essential for JWT HS256 signatures.</p>
+
+            <div class="api-section">
+                <h3>hmac_sha256 (a_key, a_message: STRING): STRING</h3>
+                <div class="signature">signature := hasher.hmac_sha256 ("secret", "message")</div>
+                <p>Compute HMAC-SHA256 and return as lowercase hex string (64 characters).</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: key_not_void: a_key /= Void</div>
+                    <div class="require">require: message_not_void: a_message /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 64</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>hmac_sha256_bytes (a_key, a_message: STRING): ARRAY [NATURAL_8]</h3>
+                <div class="signature">bytes := hasher.hmac_sha256_bytes ("secret", "message")</div>
+                <p>Compute HMAC-SHA256 and return as 32-byte array.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: key_not_void: a_key /= Void</div>
+                    <div class="require">require: message_not_void: a_message /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 32</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="md5">
+            <h2>MD5 Features (Legacy)</h2>
+            <div class="warning">
+                <strong>Warning:</strong> MD5 is cryptographically broken. Use only for checksums, never for security.
+            </div>
+
+            <div class="api-section">
+                <h3>md5 (a_input: STRING): STRING</h3>
+                <div class="signature">checksum := hasher.md5 ("data")</div>
+                <p>Compute MD5 hash and return as lowercase hex string (32 characters).</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: input_not_void: a_input /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 32</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>md5_bytes (a_input: STRING): ARRAY [NATURAL_8]</h3>
+                <div class="signature">bytes := hasher.md5_bytes ("data")</div>
+                <p>Compute MD5 hash and return as 16-byte array.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: input_not_void: a_input /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = 16</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="utilities">
+            <h2>Utility Features</h2>
+
+            <div class="api-section">
+                <h3>bytes_to_hex (a_bytes: ARRAY [NATURAL_8]): STRING</h3>
+                <div class="signature">hex := hasher.bytes_to_hex (byte_array)</div>
+                <p>Convert byte array to lowercase hexadecimal string.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: bytes_not_void: a_bytes /= Void</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = a_bytes.count * 2</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>hex_to_bytes (a_hex: STRING): ARRAY [NATURAL_8]</h3>
+                <div class="signature">bytes := hasher.hex_to_bytes ("deadbeef")</div>
+                <p>Convert hexadecimal string to byte array.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: hex_not_void: a_hex /= Void</div>
+                    <div class="require">require: even_length: a_hex.count \\ 2 = 0</div>
+                    <div class="require">require: valid_hex: across a_hex as c all Hex_chars.has (c.item.as_lower) end</div>
+                    <div class="ensure">ensure: result_not_void: Result /= Void</div>
+                    <div class="ensure">ensure: correct_length: Result.count = a_hex.count // 2</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="constants">
+            <h2>Constants</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Constant</th>
+                        <th>Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Hex_chars</code></td>
+                        <td><code>0123456789abcdef</code></td>
+                        <td>Hexadecimal characters for output formatting</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="invariants">
+            <h2>Class Invariants</h2>
+            <div class="contracts">
+                <div class="ensure">invariant: buffer_exists: working_buffer /= Void</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="../index.html">&larr; Back to simple_hash</a>
+        </p>
+        <p class="copyright">
+            Copyright &copy; 2024-2025 Larry Rix. MIT License.
+        </p>
+    </footer>
+</body>
+</html>
