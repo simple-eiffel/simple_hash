@@ -4,7 +4,7 @@
 
 # simple_hash
 
-**[Documentation](https://ljr1981.github.io/simple_hash/)**
+**[Documentation](https://ljr1981.github.io/simple_hash/)** | **[Watch the Build Video](https://youtu.be/Rh3KhoK_W5U)**
 
 Lightweight cryptographic hashing library for Eiffel.
 
