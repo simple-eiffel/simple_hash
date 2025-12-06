@@ -41,6 +41,100 @@ feature {NONE} -- Initialization
 			buffer_ready: working_buffer.count = 64
 		end
 
+
+feature -- SHA-1
+
+	sha1 (a_input: STRING): STRING
+			-- Compute SHA-1 hash of `a_input' and return as hex string.
+			-- Note: SHA-1 is deprecated for security; use SHA-256 for new applications.
+			-- Required for WebSocket handshake per RFC 6455.
+		require
+			input_not_void: a_input /= Void
+		local
+			l_bytes: ARRAY [NATURAL_8]
+		do
+			l_bytes := sha1_bytes (a_input)
+			Result := bytes_to_hex (l_bytes)
+		ensure
+			result_not_void: Result /= Void
+			correct_length: Result.count = 40
+			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+		end
+
+	sha1_bytes (a_input: STRING): ARRAY [NATURAL_8]
+			-- Compute SHA-1 hash of `a_input' and return as 20 bytes.
+		require
+			input_not_void: a_input /= Void
+		local
+			l_message: ARRAY [NATURAL_8]
+			l_padded: ARRAY [NATURAL_8]
+			h0, h1, h2, h3, h4: NATURAL_32
+			a, b, c, d, e: NATURAL_32
+			f, k, temp: NATURAL_32
+			w: ARRAY [NATURAL_32]
+			i, j, chunk_start: INTEGER
+		do
+			l_message := string_to_bytes (a_input)
+			l_padded := sha256_pad (l_message)
+
+			h0 := 0x67452301
+			h1 := 0xEFCDAB89
+			h2 := 0x98BADCFE
+			h3 := 0x10325476
+			h4 := 0xC3D2E1F0
+
+			create w.make_filled (0, 1, 80)
+			from chunk_start := 1 until chunk_start > l_padded.count loop
+				from i := 1 until i > 16 loop
+					j := chunk_start + (i - 1) * 4
+					w [i] := (l_padded [j].to_natural_32 |<< 24) |
+							 (l_padded [j + 1].to_natural_32 |<< 16) |
+							 (l_padded [j + 2].to_natural_32 |<< 8) |
+							 l_padded [j + 3].to_natural_32
+					i := i + 1
+				variant 17 - i end
+
+				from i := 17 until i > 80 loop
+					w [i] := rotl32 (w [i - 3].bit_xor (w [i - 8]).bit_xor (w [i - 14]).bit_xor (w [i - 16]), 1)
+					i := i + 1
+				variant 81 - i end
+
+				a := h0; b := h1; c := h2; d := h3; e := h4
+
+				from i := 1 until i > 80 loop
+					if i <= 20 then
+						f := (b & c) | (b.bit_not & d)
+						k := 0x5A827999
+					elseif i <= 40 then
+						f := b.bit_xor (c).bit_xor (d)
+						k := 0x6ED9EBA1
+					elseif i <= 60 then
+						f := (b & c) | (b & d) | (c & d)
+						k := 0x8F1BBCDC
+					else
+						f := b.bit_xor (c).bit_xor (d)
+						k := 0xCA62C1D6
+					end
+					temp := rotl32 (a, 5) + f + e + k + w [i]
+					e := d; d := c; c := rotl32 (b, 30); b := a; a := temp
+					i := i + 1
+				variant 81 - i end
+
+				h0 := h0 + a; h1 := h1 + b; h2 := h2 + c; h3 := h3 + d; h4 := h4 + e
+				chunk_start := chunk_start + 64
+			variant l_padded.count - chunk_start + 64 end
+
+			create Result.make_filled (0, 1, 20)
+			put_nat32_be (Result, 1, h0)
+			put_nat32_be (Result, 5, h1)
+			put_nat32_be (Result, 9, h2)
+			put_nat32_be (Result, 13, h3)
+			put_nat32_be (Result, 17, h4)
+		ensure
+			result_not_void: Result /= Void
+			correct_length: Result.count = 20
+		end
+
 feature -- SHA-256
 
 	sha256 (a_input: STRING): STRING
