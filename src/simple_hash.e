@@ -56,7 +56,6 @@ feature -- SHA-1
 			l_bytes := sha1_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 40
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
 		end
@@ -131,7 +130,6 @@ feature -- SHA-1
 			put_nat32_be (Result, 13, h3)
 			put_nat32_be (Result, 17, h4)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 20
 		end
 
@@ -147,7 +145,6 @@ feature -- SHA-256
 			l_bytes := sha256_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 64
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
 		end
@@ -264,7 +261,6 @@ feature -- SHA-256
 			put_nat32_be (Result, 25, h6)
 			put_nat32_be (Result, 29, h7)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 32
 		end
 
@@ -280,7 +276,6 @@ feature -- SHA-512
 			l_bytes := sha512_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 128
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
 		end
@@ -401,7 +396,6 @@ feature -- SHA-512
 			put_nat64_be (Result, 49, h6)
 			put_nat64_be (Result, 57, h7)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 64
 		end
 
@@ -418,7 +412,6 @@ feature -- HMAC-SHA256
 			l_bytes := hmac_sha256_bytes (a_key, a_message)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 64
 		end
 
@@ -472,7 +465,6 @@ feature -- HMAC-SHA256
 			l_outer_data := bytes_to_string (l_outer_pad) + bytes_to_string (l_inner_hash)
 			Result := sha256_bytes (l_outer_data)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 32
 		end
 
@@ -489,7 +481,6 @@ feature -- HMAC-SHA512
 			l_bytes := hmac_sha512_bytes (a_key, a_message)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 128
 		end
 
@@ -544,7 +535,6 @@ feature -- HMAC-SHA512
 			l_outer_data := bytes_to_string (l_outer_pad) + bytes_to_string (l_inner_hash)
 			Result := sha512_bytes (l_outer_data)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 64
 		end
 
@@ -561,7 +551,6 @@ feature -- MD5 (Legacy - not for security)
 			l_bytes := md5_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 32
 		end
 
@@ -642,7 +631,6 @@ feature -- MD5 (Legacy - not for security)
 			put_nat32_le (Result, 9, c0)
 			put_nat32_le (Result, 13, d0)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = 16
 		end
 
@@ -892,7 +880,6 @@ feature -- Utilities
 				Result.append (byte_to_hex (b.item))
 			end
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = a_bytes.count * 2
 		end
 
@@ -915,7 +902,6 @@ feature -- Utilities
 			end
 			create Result.make_from_array (l_result.to_array)
 		ensure
-			result_not_void: Result /= Void
 			correct_length: Result.count = a_hex.count // 2
 		end
 
@@ -964,7 +950,6 @@ feature {NONE} -- Implementation: SHA-256
 
 			create Result.make_from_array (l_result.to_array)
 		ensure
-			result_not_void: Result /= Void
 			multiple_of_64: Result.count \\ 64 = 0
 		end
 
@@ -1035,7 +1020,6 @@ feature {NONE} -- Implementation: SHA-512
 
 			create Result.make_from_array (l_result.to_array)
 		ensure
-			result_not_void: Result /= Void
 			multiple_of_128: Result.count \\ 128 = 0
 		end
 
@@ -1104,7 +1088,6 @@ feature {NONE} -- Implementation: MD5
 
 			create Result.make_from_array (l_result.to_array)
 		ensure
-			result_not_void: Result /= Void
 			multiple_of_64: Result.count \\ 64 = 0
 		end
 
