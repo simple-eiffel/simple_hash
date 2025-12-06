@@ -30,8 +30,11 @@
             <h2>Features</h2>
             <ul>
                 <li><strong>SHA-256</strong> - Secure hash, 256-bit output (FIPS 180-4)</li>
+                <li><strong>SHA-512</strong> - Secure hash, 512-bit output (FIPS 180-4)</li>
                 <li><strong>HMAC-SHA256</strong> - Keyed-hash message authentication (RFC 2104)</li>
+                <li><strong>HMAC-SHA512</strong> - Keyed-hash with 512-bit output</li>
                 <li><strong>MD5</strong> - Legacy hash for checksums (not for security)</li>
+                <li><strong>File Hashing</strong> - Stream files directly without loading into memory</li>
                 <li><strong>Design by Contract</strong> - Full preconditions and postconditions</li>
                 <li><strong>Pure Eiffel</strong> - No external dependencies</li>
             </ul>
@@ -68,6 +71,39 @@ do
     -- 64-character hex string
 end</code></pre>
 
+            <h3>SHA-512 (Stronger security)</h3>
+            <pre><code>local
+    hasher: SIMPLE_HASH
+    digest: STRING
+do
+    create hasher.make
+
+    -- 512-bit hash for maximum security
+    digest := hasher.sha512 ("sensitive data")
+    -- 128-character hex string
+
+    -- HMAC-SHA512 for signatures
+    signature := hasher.hmac_sha512 ("secret", "message")
+end</code></pre>
+
+            <h3>File Hashing (Streaming)</h3>
+            <pre><code>local
+    hasher: SIMPLE_HASH
+    file_hash: detachable STRING
+do
+    create hasher.make
+
+    -- Hash a file without loading it into memory
+    file_hash := hasher.sha256_file ("path/to/large/file.dat")
+    if attached file_hash as h then
+        print ("SHA-256: " + h)
+    end
+
+    -- Also available:
+    -- hasher.sha512_file (path)
+    -- hasher.md5_file (path)
+end</code></pre>
+
             <h3>MD5 (Legacy checksums only)</h3>
             <pre><code>local
     hasher: SIMPLE_HASH
@@ -100,10 +136,22 @@ end</code></pre>
                         <td>Passwords, signatures, integrity</td>
                     </tr>
                     <tr>
+                        <td>SHA-512</td>
+                        <td>512 bits (128 hex chars)</td>
+                        <td>Secure</td>
+                        <td>High-security applications</td>
+                    </tr>
+                    <tr>
                         <td>HMAC-SHA256</td>
                         <td>256 bits (64 hex chars)</td>
                         <td>Secure</td>
                         <td>JWT signatures, API auth, MACs</td>
+                    </tr>
+                    <tr>
+                        <td>HMAC-SHA512</td>
+                        <td>512 bits (128 hex chars)</td>
+                        <td>Secure</td>
+                        <td>High-security MACs</td>
                     </tr>
                     <tr>
                         <td>MD5</td>
