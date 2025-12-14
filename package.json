@@ -1,0 +1,9 @@
+{
+  "name": "simple_hash",
+  "version": "0.1.0",
+  "description": "Simple Hash - Lightweight cryptographic hashing for Eiffel (SHA256, HMAC, MD5)",
+  "author": "Larry Rix",
+  "license": "MIT",
+  "category": "security",
+  "keywords": ["hash", "sha256", "md5", "checksum", "digest"]
+}
