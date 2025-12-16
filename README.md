@@ -21,12 +21,12 @@ Lightweight cryptographic hashing library for Eiffel.
 Add to your ECF:
 
 ```xml
-<library name="simple_hash" location="$SIMPLE_HASH\simple_hash.ecf"/>
+<library name="simple_hash" location="$SIMPLE_EIFFEL/simple_hash/simple_hash.ecf"/>
 ```
 
-Set environment variable:
+Set environment variable (one-time setup for all simple_* libraries):
 ```
-SIMPLE_HASH=D:\prod\simple_hash
+SIMPLE_EIFFEL=D:\prod
 ```
 
 ## Usage
