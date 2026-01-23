@@ -28,10 +28,23 @@ note
 class
 	SIMPLE_HASH
 
+inherit
+	ANY
+		redefine
+			default_create
+		end
+
 create
-	make
+	make,
+	default_create
 
 feature {NONE} -- Initialization
+
+	default_create
+			-- Initialize the hasher.
+		do
+			make
+		end
 
 	make
 			-- Initialize the hasher.
@@ -48,22 +61,19 @@ feature -- SHA-1
 			-- Compute SHA-1 hash of `a_input' and return as hex string.
 			-- Note: SHA-1 is deprecated for security; use SHA-256 for new applications.
 			-- Required for WebSocket handshake per RFC 6455.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := sha1_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 40
+			correct_length: Result.count = Sha1_output_bytes * 2
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (sha1 (a_input))
 		end
 
 	sha1_bytes (a_input: STRING): ARRAY [NATURAL_8]
 			-- Compute SHA-1 hash of `a_input' and return as 20 bytes.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_message: ARRAY [NATURAL_8]
 			l_padded: ARRAY [NATURAL_8]
@@ -130,29 +140,28 @@ feature -- SHA-1
 			put_nat32_be (Result, 13, h3)
 			put_nat32_be (Result, 17, h4)
 		ensure
-			correct_length: Result.count = 20
+			correct_length: Result.count = Sha1_output_bytes
+			model_length: bytes_model (Result).count = Sha1_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (sha1_bytes (a_input))
 		end
 
 feature -- SHA-256
 
 	sha256 (a_input: STRING): STRING
 			-- Compute SHA-256 hash of `a_input' and return as hex string.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := sha256_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 64
+			correct_length: Result.count = Sha256_output_bytes * 2
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (sha256 (a_input))
 		end
 
 	sha256_bytes (a_input: STRING): ARRAY [NATURAL_8]
 			-- Compute SHA-256 hash of `a_input' and return as 32 bytes.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_message: ARRAY [NATURAL_8]
 			l_padded: ARRAY [NATURAL_8]
@@ -261,29 +270,28 @@ feature -- SHA-256
 			put_nat32_be (Result, 25, h6)
 			put_nat32_be (Result, 29, h7)
 		ensure
-			correct_length: Result.count = 32
+			correct_length: Result.count = Sha256_output_bytes
+			model_length: bytes_model (Result).count = Sha256_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (sha256_bytes (a_input))
 		end
 
 feature -- SHA-512
 
 	sha512 (a_input: STRING): STRING
 			-- Compute SHA-512 hash of `a_input' and return as hex string.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := sha512_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 128
+			correct_length: Result.count = Sha512_output_bytes * 2
 			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (sha512 (a_input))
 		end
 
 	sha512_bytes (a_input: STRING): ARRAY [NATURAL_8]
 			-- Compute SHA-512 hash of `a_input' and return as 64 bytes.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_message: ARRAY [NATURAL_8]
 			l_padded: ARRAY [NATURAL_8]
@@ -396,31 +404,29 @@ feature -- SHA-512
 			put_nat64_be (Result, 49, h6)
 			put_nat64_be (Result, 57, h7)
 		ensure
-			correct_length: Result.count = 64
+			correct_length: Result.count = Sha512_output_bytes
+			model_length: bytes_model (Result).count = Sha512_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (sha512_bytes (a_input))
 		end
 
 feature -- HMAC-SHA256
 
 	hmac_sha256 (a_key, a_message: STRING): STRING
 			-- Compute HMAC-SHA256 of `a_message' using `a_key', return as hex string.
-		require
-			key_not_void: a_key /= Void
-			message_not_void: a_message /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := hmac_sha256_bytes (a_key, a_message)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 64
+			correct_length: Result.count = Sha256_output_bytes * 2
+			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (hmac_sha256 (a_key, a_message))
 		end
 
 	hmac_sha256_bytes (a_key, a_message: STRING): ARRAY [NATURAL_8]
 			-- Compute HMAC-SHA256 of `a_message' using `a_key', return as 32 bytes.
 			-- HMAC(K, m) = H((K' xor opad) || H((K' xor ipad) || m))
-		require
-			key_not_void: a_key /= Void
-			message_not_void: a_message /= Void
 		local
 			l_key_bytes: ARRAY [NATURAL_8]
 			l_key_padded: ARRAY [NATURAL_8]
@@ -465,32 +471,30 @@ feature -- HMAC-SHA256
 			l_outer_data := bytes_to_string (l_outer_pad) + bytes_to_string (l_inner_hash)
 			Result := sha256_bytes (l_outer_data)
 		ensure
-			correct_length: Result.count = 32
+			correct_length: Result.count = Sha256_output_bytes
+			model_length: bytes_model (Result).count = Sha256_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (hmac_sha256_bytes (a_key, a_message))
 		end
 
 feature -- HMAC-SHA512
 
 	hmac_sha512 (a_key, a_message: STRING): STRING
 			-- Compute HMAC-SHA512 of `a_message' using `a_key', return as hex string.
-		require
-			key_not_void: a_key /= Void
-			message_not_void: a_message /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := hmac_sha512_bytes (a_key, a_message)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 128
+			correct_length: Result.count = Sha512_output_bytes * 2
+			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (hmac_sha512 (a_key, a_message))
 		end
 
 	hmac_sha512_bytes (a_key, a_message: STRING): ARRAY [NATURAL_8]
 			-- Compute HMAC-SHA512 of `a_message' using `a_key', return as 64 bytes.
 			-- HMAC(K, m) = H((K' xor opad) || H((K' xor ipad) || m))
 			-- Block size for SHA-512 is 128 bytes.
-		require
-			key_not_void: a_key /= Void
-			message_not_void: a_message /= Void
 		local
 			l_key_bytes: ARRAY [NATURAL_8]
 			l_key_padded: ARRAY [NATURAL_8]
@@ -535,7 +539,9 @@ feature -- HMAC-SHA512
 			l_outer_data := bytes_to_string (l_outer_pad) + bytes_to_string (l_inner_hash)
 			Result := sha512_bytes (l_outer_data)
 		ensure
-			correct_length: Result.count = 64
+			correct_length: Result.count = Sha512_output_bytes
+			model_length: bytes_model (Result).count = Sha512_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (hmac_sha512_bytes (a_key, a_message))
 		end
 
 feature -- MD5 (Legacy - not for security)
@@ -543,21 +549,19 @@ feature -- MD5 (Legacy - not for security)
 	md5 (a_input: STRING): STRING
 			-- Compute MD5 hash of `a_input' and return as hex string.
 			-- WARNING: MD5 is cryptographically broken. Use for checksums only.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_bytes: ARRAY [NATURAL_8]
 		do
 			l_bytes := md5_bytes (a_input)
 			Result := bytes_to_hex (l_bytes)
 		ensure
-			correct_length: Result.count = 32
+			correct_length: Result.count = Md5_output_bytes * 2
+			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			deterministic: Result.same_string (md5 (a_input))
 		end
 
 	md5_bytes (a_input: STRING): ARRAY [NATURAL_8]
 			-- Compute MD5 hash of `a_input' and return as 16 bytes.
-		require
-			input_not_void: a_input /= Void
 		local
 			l_message: ARRAY [NATURAL_8]
 			l_padded: ARRAY [NATURAL_8]
@@ -631,7 +635,9 @@ feature -- MD5 (Legacy - not for security)
 			put_nat32_le (Result, 9, c0)
 			put_nat32_le (Result, 13, d0)
 		ensure
-			correct_length: Result.count = 16
+			correct_length: Result.count = Md5_output_bytes
+			model_length: bytes_model (Result).count = Md5_output_bytes
+			deterministic: bytes_model (Result) |=| bytes_model (md5_bytes (a_input))
 		end
 
 feature -- File Hashing
@@ -640,7 +646,6 @@ feature -- File Hashing
 			-- Compute SHA-256 hash of file at `a_path' and return as hex string.
 			-- Returns Void if file cannot be read.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_bytes: detachable ARRAY [NATURAL_8]
@@ -650,14 +655,14 @@ feature -- File Hashing
 				Result := bytes_to_hex (l_bytes)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 64
+			correct_length: Result /= Void implies Result.count = Sha256_output_bytes * 2
+			lowercase_hex: attached Result as r implies across r as c all c.item.is_lower or c.item.is_digit end
 		end
 
 	sha256_file_bytes (a_path: STRING): detachable ARRAY [NATURAL_8]
 			-- Compute SHA-256 hash of file at `a_path' and return as 32 bytes.
 			-- Returns Void if file cannot be read.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_file: RAW_FILE
@@ -675,14 +680,14 @@ feature -- File Hashing
 				Result := sha256_bytes (l_content)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 32
+			correct_length: Result /= Void implies Result.count = Sha256_output_bytes
+			model_length: attached Result as r implies bytes_model (r).count = Sha256_output_bytes
 		end
 
 	sha512_file (a_path: STRING): detachable STRING
 			-- Compute SHA-512 hash of file at `a_path' and return as hex string.
 			-- Returns Void if file cannot be read.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_bytes: detachable ARRAY [NATURAL_8]
@@ -692,14 +697,14 @@ feature -- File Hashing
 				Result := bytes_to_hex (l_bytes)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 128
+			correct_length: Result /= Void implies Result.count = Sha512_output_bytes * 2
+			lowercase_hex: attached Result as r implies across r as c all c.item.is_lower or c.item.is_digit end
 		end
 
 	sha512_file_bytes (a_path: STRING): detachable ARRAY [NATURAL_8]
 			-- Compute SHA-512 hash of file at `a_path' and return as 64 bytes.
 			-- Returns Void if file cannot be read.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_file: RAW_FILE
@@ -717,7 +722,8 @@ feature -- File Hashing
 				Result := sha512_bytes (l_content)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 64
+			correct_length: Result /= Void implies Result.count = Sha512_output_bytes
+			model_length: attached Result as r implies bytes_model (r).count = Sha512_output_bytes
 		end
 
 	md5_file (a_path: STRING): detachable STRING
@@ -725,7 +731,6 @@ feature -- File Hashing
 			-- Returns Void if file cannot be read.
 			-- WARNING: MD5 is cryptographically broken. Use for checksums only.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_bytes: detachable ARRAY [NATURAL_8]
@@ -735,14 +740,14 @@ feature -- File Hashing
 				Result := bytes_to_hex (l_bytes)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 32
+			correct_length: Result /= Void implies Result.count = Md5_output_bytes * 2
+			lowercase_hex: attached Result as r implies across r as c all c.item.is_lower or c.item.is_digit end
 		end
 
 	md5_file_bytes (a_path: STRING): detachable ARRAY [NATURAL_8]
 			-- Compute MD5 hash of file at `a_path' and return as 16 bytes.
 			-- Returns Void if file cannot be read.
 		require
-			path_not_void: a_path /= Void
 			path_not_empty: not a_path.is_empty
 		local
 			l_file: RAW_FILE
@@ -760,7 +765,8 @@ feature -- File Hashing
 				Result := md5_bytes (l_content)
 			end
 		ensure
-			correct_length: Result /= Void implies Result.count = 16
+			correct_length: Result /= Void implies Result.count = Md5_output_bytes
+			model_length: attached Result as r implies bytes_model (r).count = Md5_output_bytes
 		end
 
 feature -- Secure Comparison (Constant-Time)
@@ -769,9 +775,6 @@ feature -- Secure Comparison (Constant-Time)
 			-- Compare two strings in constant time to prevent timing attacks.
 			-- Always compares all bytes regardless of where first difference occurs.
 			-- Use this when comparing secrets like HMAC signatures, tokens, etc.
-		require
-			left_not_void: a_left /= Void
-			right_not_void: a_right /= Void
 		local
 			l_result: NATURAL_8
 			i: INTEGER
@@ -810,15 +813,14 @@ feature -- Secure Comparison (Constant-Time)
 			Result := l_result = 0
 		ensure
 			same_strings_equal: a_left.same_string (a_right) implies Result
+			different_strings_unequal: not a_left.same_string (a_right) implies not Result
+			symmetric: Result = secure_compare (a_right, a_left)
 		end
 
 	secure_compare_bytes (a_left, a_right: ARRAY [NATURAL_8]): BOOLEAN
 			-- Compare two byte arrays in constant time to prevent timing attacks.
 			-- Always compares all bytes regardless of where first difference occurs.
 			-- Use this when comparing hash digests, HMAC values, etc.
-		require
-			left_not_void: a_left /= Void
-			right_not_void: a_right /= Void
 		local
 			l_result: NATURAL_8
 			i: INTEGER
@@ -854,26 +856,27 @@ feature -- Secure Comparison (Constant-Time)
 				end
 			end
 			Result := l_result = 0
+		ensure
+			model_equal_implies_result: (bytes_model (a_left) |=| bytes_model (a_right)) implies Result
+			symmetric: Result = secure_compare_bytes (a_right, a_left)
 		end
 
 	secure_compare_hex (a_left, a_right: STRING): BOOLEAN
 			-- Compare two hex strings in constant time.
 			-- Convenience wrapper - converts to bytes first for proper comparison.
 		require
-			left_not_void: a_left /= Void
-			right_not_void: a_right /= Void
 			left_valid_hex: a_left.count \\ 2 = 0 and across a_left as c all Hex_chars.has (c.item.as_lower) end
 			right_valid_hex: a_right.count \\ 2 = 0 and across a_right as c all Hex_chars.has (c.item.as_lower) end
 		do
 			Result := secure_compare_bytes (hex_to_bytes (a_left), hex_to_bytes (a_right))
+		ensure
+			symmetric: Result = secure_compare_hex (a_right, a_left)
 		end
 
 feature -- Utilities
 
 	bytes_to_hex (a_bytes: ARRAY [NATURAL_8]): STRING
 			-- Convert bytes to lowercase hex string.
-		require
-			bytes_not_void: a_bytes /= Void
 		do
 			create Result.make (a_bytes.count * 2)
 			across a_bytes as b loop
@@ -881,12 +884,13 @@ feature -- Utilities
 			end
 		ensure
 			correct_length: Result.count = a_bytes.count * 2
+			lowercase_hex: across Result as c all c.item.is_lower or c.item.is_digit end
+			roundtrip: bytes_model (hex_to_bytes (Result)) |=| bytes_model (a_bytes)
 		end
 
 	hex_to_bytes (a_hex: STRING): ARRAY [NATURAL_8]
 			-- Convert hex string to bytes.
 		require
-			hex_not_void: a_hex /= Void
 			even_length: a_hex.count \\ 2 = 0
 			valid_hex: across a_hex as c all Hex_chars.has (c.item.as_lower) end
 		local
@@ -903,6 +907,7 @@ feature -- Utilities
 			create Result.make_from_array (l_result.to_array)
 		ensure
 			correct_length: Result.count = a_hex.count // 2
+			model_length: bytes_model (Result).count = a_hex.count // 2
 		end
 
 feature {NONE} -- Implementation: SHA-256
@@ -1240,8 +1245,57 @@ feature -- Constants
 	File_buffer_size: INTEGER = 8192
 			-- Buffer size for file reading (8 KB chunks).
 
+	Sha1_output_bytes: INTEGER = 20
+			-- SHA-1 produces 20 bytes (160 bits).
+
+	Sha256_output_bytes: INTEGER = 32
+			-- SHA-256 produces 32 bytes (256 bits).
+
+	Sha512_output_bytes: INTEGER = 64
+			-- SHA-512 produces 64 bytes (512 bits).
+
+	Md5_output_bytes: INTEGER = 16
+			-- MD5 produces 16 bytes (128 bits).
+
+feature -- Model Queries (MML)
+
+	bytes_model (a_bytes: ARRAY [NATURAL_8]): MML_SEQUENCE [NATURAL_8]
+			-- Mathematical model of byte array as an immutable sequence.
+		do
+			create Result
+			across a_bytes as ic loop
+				Result := Result & ic
+			end
+		ensure
+			same_count: Result.count = a_bytes.count
+			same_elements: across 1 |..| a_bytes.count as i all Result [i] = a_bytes [i] end
+		end
+
+	string_bytes_model (a_string: STRING): MML_SEQUENCE [NATURAL_8]
+			-- Mathematical model of string as a byte sequence.
+		do
+			create Result
+			across a_string as c loop
+				Result := Result & c.item.code.to_natural_8
+			end
+		ensure
+			same_count: Result.count = a_string.count
+		end
+
+	hex_model (a_hex: STRING): MML_SET [CHARACTER]
+			-- Set of unique characters in a hex string (for verification).
+		do
+			create Result
+			across a_hex as c loop
+				Result := Result & c.item
+			end
+		ensure
+			all_hex_chars: Result.for_all (agent (ch: CHARACTER): BOOLEAN do Result := Hex_chars.has (ch) end)
+		end
+
 invariant
 	buffer_exists: working_buffer /= Void
+	buffer_size: working_buffer.count = 64
 
 note
 	copyright: "Copyright (c) 2024-2025, Larry Rix"
