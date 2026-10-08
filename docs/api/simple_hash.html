@@ -22,6 +22,8 @@
             <li><a href="#sha256">SHA-256</a></li>
             <li><a href="#hmac">HMAC-SHA256</a></li>
             <li><a href="#md5">MD5</a></li>
+            <li><a href="#files">File Hashing</a></li>
+            <li><a href="#streaming">Streaming States</a></li>
             <li><a href="#utilities">Utilities</a></li>
         </ul>
     </nav>
@@ -137,6 +139,76 @@
             </div>
         </section>
 
+        <section id="files">
+            <h2>File Hashing Features</h2>
+            <p>
+                Files are streamed in <code>File_chunk_size</code> (256 KB) pieces through one reusable
+                C-heap buffer, read with Win32 <code>CreateFileW</code>/<code>ReadFile</code> (declared
+                <code>C blocking</code>), so memory stays flat and files over 2 GB work. Each feature answers
+                <code>Void</code> if the file does not exist, is a directory, cannot be opened or a read fails.
+                A <code>STRING_32</code> or <code>PATH</code> reaches any Unicode name; a <code>STRING_8</code>
+                is taken character for character (Latin-1), not decoded as UTF-8.
+            </p>
+
+            <div class="api-section">
+                <h3>sha256_file (a_path: READABLE_STRING_GENERAL): detachable STRING</h3>
+                <div class="signature">digest := hasher.sha256_file ({STRING_32} "notes/λόγος.md")</div>
+                <p>SHA-256 of the file as 64 hex characters. Siblings: <code>sha512_file</code>, <code>sha1_file</code>, <code>md5_file</code>.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: path_not_empty: not a_path.is_empty</div>
+                    <div class="ensure">ensure: correct_length: Result /= Void implies Result.count = Sha256_output_bytes * 2</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>sha256_file_bytes (a_path: READABLE_STRING_GENERAL): detachable ARRAY [NATURAL_8]</h3>
+                <div class="signature">bytes := hasher.sha256_file_bytes (path)</div>
+                <p>SHA-256 of the file as 32 bytes. Siblings: <code>sha512_file_bytes</code>, <code>sha1_file_bytes</code>, <code>md5_file_bytes</code>.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: path_not_empty: not a_path.is_empty</div>
+                    <div class="ensure">ensure: correct_length: Result /= Void implies Result.count = Sha256_output_bytes</div>
+                </div>
+            </div>
+
+            <div class="api-section">
+                <h3>sha256_path (a_path: PATH): detachable STRING</h3>
+                <div class="signature">digest := hasher.sha256_path (create {PATH}.make_from_string (name))</div>
+                <p>SHA-256 hex of the file at a <code>PATH</code>. Siblings: <code>sha512_path</code>, <code>sha1_path</code>, <code>md5_path</code>.</p>
+                <div class="contracts">
+                    <h4>Contracts</h4>
+                    <div class="require">require: path_not_empty: not a_path.is_empty</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="streaming">
+            <h2>Streaming States</h2>
+            <p>
+                <code>SIMPLE_HASH_STATE</code> (deferred) with <code>SIMPLE_SHA256_STATE</code>,
+                <code>SIMPLE_SHA512_STATE</code>, <code>SIMPLE_SHA1_STATE</code> and <code>SIMPLE_MD5_STATE</code>:
+                every digest in the library runs through one of these. Only one partial block is held between
+                updates; block compression is one-class inline C over C-heap memory, declared <code>C blocking</code>
+                so a long hash never holds up the garbage collector on another processor.
+            </p>
+            <table>
+                <thead>
+                    <tr><th>Feature</th><th>Description</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>make</code></td><td>Fresh digest</td></tr>
+                    <tr><td><code>update (READABLE_STRING_8)</code></td><td>Feed the character codes of a string (require: <code>not is_finished</code>)</td></tr>
+                    <tr><td><code>update_bytes (ARRAY [NATURAL_8])</code></td><td>Feed bytes</td></tr>
+                    <tr><td><code>update_from_managed (MANAGED_POINTER, INTEGER)</code></td><td>Feed the first n bytes of a C-heap buffer, no copy</td></tr>
+                    <tr><td><code>finish</code></td><td>Pad and complete (ensure: <code>is_finished</code>, <code>digest.count = digest_size</code>)</td></tr>
+                    <tr><td><code>digest</code> / <code>digest_hex</code></td><td>The result once finished</td></tr>
+                    <tr><td><code>reset</code></td><td>Start over, reusing the object</td></tr>
+                    <tr><td><code>byte_count</code></td><td>Message bytes fed since the last reset</td></tr>
+                </tbody>
+            </table>
+        </section>
+
         <section id="utilities">
             <h2>Utility Features</h2>
 
@@ -183,6 +255,16 @@
                         <td><code>0123456789abcdef</code></td>
                         <td>Hexadecimal characters for output formatting</td>
                     </tr>
+                    <tr>
+                        <td><code>File_chunk_size</code></td>
+                        <td><code>262144</code></td>
+                        <td>Bytes read per chunk when hashing a file</td>
+                    </tr>
+                    <tr>
+                        <td><code>File_buffer_size</code></td>
+                        <td><code>8192</code></td>
+                        <td>Former file buffer size, kept for compatibility (unused)</td>
+                    </tr>
                 </tbody>
             </table>
         </section>
@@ -200,7 +282,7 @@
             <a href="../index.html">&larr; Back to simple_hash</a>
         </p>
         <p class="copyright">
-            Copyright &copy; 2024-2025 Larry Rix. MIT License.
+            Copyright &copy; 2024-2026 Larry Rix. MIT License.
         </p>
     </footer>
 </body>

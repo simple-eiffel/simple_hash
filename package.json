@@ -1,7 +1,7 @@
 {
   "name": "simple_hash",
-  "version": "0.1.0",
-  "description": "Simple Hash - Lightweight cryptographic hashing for Eiffel (SHA256, HMAC, MD5)",
+  "version": "1.1.0",
+  "description": "Simple Hash - Lightweight cryptographic hashing for Eiffel (SHA-256, SHA-512, SHA-1, MD5, HMAC; streaming file hashing)",
   "author": "Larry Rix",
   "license": "MIT",
   "category": "security",

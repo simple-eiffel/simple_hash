@@ -10,11 +10,14 @@ Lightweight cryptographic hashing library for Eiffel.
 
 ## Features
 
-- **SHA-256** - Secure hash (FIPS 180-4)
-- **HMAC-SHA256** - Keyed-hash message authentication (RFC 2104)
+- **SHA-256, SHA-512** - Secure hashes (FIPS 180-4)
+- **HMAC-SHA256, HMAC-SHA512** - Keyed-hash message authentication (RFC 2104)
+- **SHA-1** - Legacy, for protocols that require it (WebSocket handshake)
 - **MD5** - Legacy checksums (not for security)
+- **Streaming file hashing** - 256 KB chunks, flat memory, no 2 GB limit, Unicode file names
+- **Incremental hashing** - `SIMPLE_SHA256_STATE` and friends: feed data in pieces, then `finish`
 - **Design by Contract** - Full preconditions/postconditions
-- **Pure Eiffel** - No external dependencies
+- **EiffelBase only** - Block compression and file reads are inline C (Windows)
 
 ## Installation
 
@@ -59,6 +62,41 @@ do
 end
 ```
 
+### File Hashing (streamed)
+
+```eiffel
+local
+    hasher: SIMPLE_HASH
+do
+    create hasher.make
+    -- 256 KB at a time: memory stays flat at any file size
+    if attached hasher.sha256_file ("D:\data\big.iso") as h then
+        print (h)
+    end
+    -- Unicode names: pass a STRING_32 or a PATH.
+    -- A STRING_8 is taken as Latin-1 characters, NOT decoded as UTF-8.
+    if attached hasher.sha256_file ({STRING_32} "notes\λόγος.md") as h then
+        print (h)
+    end
+end
+```
+
+Every file feature answers `Void` if the file is missing, is a directory, cannot be opened or a read fails.
+
+### Incremental Hashing
+
+```eiffel
+local
+    state: SIMPLE_SHA256_STATE
+do
+    create state.make
+    state.update ("first part, ")
+    state.update ("second part")
+    state.finish
+    print (state.digest_hex) -- same as hasher.sha256 ("first part, second part")
+end
+```
+
 ### MD5 (Legacy only)
 
 ```eiffel
@@ -85,6 +123,33 @@ end
 | `hmac_sha256_bytes (key, msg): ARRAY[NATURAL_8]` | HMAC-SHA256 as 32 bytes |
 | `md5 (STRING): STRING` | MD5 hash as 32 hex chars |
 | `md5_bytes (STRING): ARRAY[NATURAL_8]` | MD5 hash as 16 bytes |
+| `sha512`, `sha512_bytes`, `hmac_sha512`, `hmac_sha512_bytes` | SHA-512 family (128 hex chars / 64 bytes) |
+| `sha1 (STRING): STRING`, `sha1_bytes` | SHA-1 (40 hex chars / 20 bytes) |
+
+### File Hashing
+
+| Feature | Description |
+|---------|-------------|
+| `sha256_file (READABLE_STRING_GENERAL): detachable STRING` | SHA-256 hex of a file, streamed |
+| `sha256_file_bytes (READABLE_STRING_GENERAL): detachable ARRAY[NATURAL_8]` | SHA-256 bytes of a file |
+| `sha256_path (PATH): detachable STRING` | SHA-256 hex of the file at a PATH |
+| `sha512_*`, `sha1_*`, `md5_*` | The same three forms for each algorithm |
+
+### Streaming States
+
+`SIMPLE_SHA256_STATE`, `SIMPLE_SHA512_STATE`, `SIMPLE_SHA1_STATE`, `SIMPLE_MD5_STATE` (all `SIMPLE_HASH_STATE`):
+`update (READABLE_STRING_8)`, `update_bytes (ARRAY[NATURAL_8])`, `update_from_managed (MANAGED_POINTER, INTEGER)`,
+`finish`, `digest`, `digest_hex`, `reset`, `byte_count`.
+
+## Performance
+
+Finalized build on a Ryzen 9 7945HX, 1 GiB file (1.1.0 vs 1.0.0):
+
+| | 1.0.0 | 1.1.0 |
+|---|---|---|
+| SHA-256 file, lean | 12 MB/s, 5,282 MB peak working set | 356 MB/s, 7 MB |
+| SHA-256 file, with contracts | 0.88 MB/s (100 MB file) | 365 MB/s, 12 MB |
+| SHA-512 / SHA-1 / MD5 file, lean | 15 / n.a. / 23 MB/s (100 MB) | 553 / 547 / 720 MB/s |
 
 ### Utilities
 
@@ -102,8 +167,8 @@ end
 
 ## Dependencies
 
-- EiffelBase only
+- EiffelBase only (Windows: file reads use Win32 `CreateFileW`/`ReadFile` via inline C)
 
 ## License
 
-MIT License - Copyright (c) 2024-2025, Larry Rix
+MIT License - Copyright (c) 2024-2026, Larry Rix

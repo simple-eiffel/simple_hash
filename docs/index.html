@@ -15,7 +15,7 @@
         <h1>simple_hash</h1>
         <p class="tagline">Cryptographic Hashing for Eiffel</p>
         <div class="badges">
-            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-version">v1.1.0</span>
             <span class="badge badge-license">MIT</span>
         </div>
     </header>
@@ -39,9 +39,12 @@
                 <li><strong>HMAC-SHA256</strong> - Keyed-hash message authentication (RFC 2104)</li>
                 <li><strong>HMAC-SHA512</strong> - Keyed-hash with 512-bit output</li>
                 <li><strong>MD5</strong> - Legacy hash for checksums (not for security)</li>
-                <li><strong>File Hashing</strong> - Stream files directly without loading into memory</li>
+                <li><strong>SHA-1</strong> - Legacy, for protocols that require it (WebSocket handshake)</li>
+                <li><strong>File Hashing</strong> - Streamed in 256 KB chunks: flat memory (about 7 MB working set for a 1 GB file), no 2 GB limit, about 360 MB/s SHA-256</li>
+                <li><strong>Unicode file names</strong> - Pass a STRING_32 or a PATH (Hebrew, Greek, any script)</li>
+                <li><strong>Incremental hashing</strong> - SIMPLE_SHA256_STATE and friends: feed data in pieces, then finish</li>
                 <li><strong>Design by Contract</strong> - Full preconditions and postconditions</li>
-                <li><strong>Pure Eiffel</strong> - No external dependencies</li>
+                <li><strong>EiffelBase only</strong> - No other libraries; block compression and file reads are inline C (Windows)</li>
             </ul>
         </section>
 
@@ -98,15 +101,32 @@ end</code></pre>
 do
     create hasher.make
 
-    -- Hash a file without loading it into memory
+    -- Streamed in 256 KB chunks: memory stays flat at any file size
     file_hash := hasher.sha256_file ("path/to/large/file.dat")
     if attached file_hash as h then
         print ("SHA-256: " + h)
     end
 
-    -- Also available:
-    -- hasher.sha512_file (path)
-    -- hasher.md5_file (path)
+    -- Unicode names: pass a STRING_32 (a STRING_8 is read as Latin-1, not UTF-8)
+    file_hash := hasher.sha256_file ({STRING_32} "notes/λόγος.md")
+    -- ... or a PATH
+    file_hash := hasher.sha256_path (create {PATH}.make_from_string ("notes/λόγος.md"))
+
+    -- Also available: sha512_file, sha1_file, md5_file, the *_file_bytes
+    -- variants and sha512_path, sha1_path, md5_path.
+    -- Each answers Void if the file is missing, a directory or unreadable.
+end</code></pre>
+
+            <h3>Incremental Hashing</h3>
+            <pre><code>local
+    state: SIMPLE_SHA256_STATE
+do
+    create state.make
+    state.update ("first part, ")
+    state.update ("second part")
+    state.finish
+    print (state.digest_hex)   -- same as hasher.sha256 ("first part, second part")
+    state.reset                -- reuse for the next message
 end</code></pre>
 
             <h3>MD5 (Legacy checksums only)</h3>
@@ -182,7 +202,7 @@ end</code></pre>
         <section id="specs">
             <h2>Specifications</h2>
             <ul>
-                <li><a href="https://csrc.nist.gov/publications/detail/fips/180/4/final">FIPS 180-4</a> - Secure Hash Standard (SHA-256)</li>
+                <li><a href="https://csrc.nist.gov/publications/detail/fips/180/4/final">FIPS 180-4</a> - Secure Hash Standard (SHA-1, SHA-256, SHA-512)</li>
                 <li><a href="https://datatracker.ietf.org/doc/html/rfc2104">RFC 2104</a> - HMAC: Keyed-Hashing for Message Authentication</li>
                 <li><a href="https://datatracker.ietf.org/doc/html/rfc1321">RFC 1321</a> - The MD5 Message-Digest Algorithm</li>
             </ul>
@@ -195,7 +215,7 @@ end</code></pre>
             <a href="https://github.com/simple-eiffel/simple_hash">GitHub</a>
         </p>
         <p class="copyright">
-            Copyright &copy; 2024-2025 Larry Rix. MIT License.
+            Copyright &copy; 2024-2026 Larry Rix. MIT License.
         </p>
     </footer>
 </body>
