@@ -14,8 +14,10 @@ feature {NONE} -- Initialization
 			-- Run tests.
 		local
 			tests: LIB_TESTS
+			streaming: STREAMING_TESTS
 		do
 			create tests
+			create streaming
 			print ("simple_hash test runner%N")
 			print ("========================%N%N")
 
@@ -81,6 +83,30 @@ feature {NONE} -- Initialization
 			run_test (agent tests.test_md5_file, "test_md5_file")
 			run_test (agent tests.test_sha256_file_not_found, "test_sha256_file_not_found")
 			run_test (agent tests.test_sha256_file_matches_string, "test_sha256_file_matches_string")
+
+			-- Streaming, vectors, file chunks, Unicode names (1.1.0)
+			run_test (agent streaming.test_vectors_sha1, "test_vectors_sha1")
+			run_test (agent streaming.test_vectors_sha256, "test_vectors_sha256")
+			run_test (agent streaming.test_vectors_sha512, "test_vectors_sha512")
+			run_test (agent streaming.test_vectors_md5, "test_vectors_md5")
+			run_test (agent streaming.test_md5_rfc1321_suite, "test_md5_rfc1321_suite")
+			run_test (agent streaming.test_boundary_lengths_sha1, "test_boundary_lengths_sha1")
+			run_test (agent streaming.test_boundary_lengths_sha256, "test_boundary_lengths_sha256")
+			run_test (agent streaming.test_boundary_lengths_sha512, "test_boundary_lengths_sha512")
+			run_test (agent streaming.test_boundary_lengths_md5, "test_boundary_lengths_md5")
+			run_test (agent streaming.test_streaming_pieces_sha1, "test_streaming_pieces_sha1")
+			run_test (agent streaming.test_streaming_pieces_sha256, "test_streaming_pieces_sha256")
+			run_test (agent streaming.test_streaming_pieces_sha512, "test_streaming_pieces_sha512")
+			run_test (agent streaming.test_streaming_pieces_md5, "test_streaming_pieces_md5")
+			run_test (agent streaming.test_multichunk_file_sha1, "test_multichunk_file_sha1")
+			run_test (agent streaming.test_multichunk_file_sha256, "test_multichunk_file_sha256")
+			run_test (agent streaming.test_multichunk_file_sha512, "test_multichunk_file_sha512")
+			run_test (agent streaming.test_multichunk_file_md5, "test_multichunk_file_md5")
+			run_test (agent streaming.test_unicode_file_name, "test_unicode_file_name")
+			run_test (agent streaming.test_empty_file, "test_empty_file")
+			run_test (agent streaming.test_directory_is_void, "test_directory_is_void")
+			run_test (agent streaming.test_missing_file_is_void, "test_missing_file_is_void")
+			run_test (agent streaming.test_hmac_rfc4231_long_key, "test_hmac_rfc4231_long_key")
 
 			print ("%N========================%N")
 			print ("Results: " + passed.out + " passed, " + failed.out + " failed%N")
