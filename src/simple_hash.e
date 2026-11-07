@@ -654,21 +654,16 @@ feature {NONE} -- Implementation: Streaming
 			hex_length: attached a_bytes as al_b implies (attached Result as al_r and then al_r.count = al_b.count * 2)
 		end
 
-feature {NONE} -- Implementation: Win32 file reading
+feature {NONE} -- Implementation: File reading
 
 	c_open_for_read (a_name: POINTER): POINTER
-			-- Handle on the file at the UTF-16 path `a_name' opened for sequential
-			-- reading (others may still read, write or delete it), or null.
+			-- Handle on the file at the native-encoded path `a_name' opened for
+			-- sequential reading, or null. See Clib/simple_hash_file.h.
 			-- Blocking: an open can wait on the disk, the network or a virus scanner.
 		external
-			"C blocking inline use <windows.h>"
+			"C blocking inline use %"simple_hash_file.h%""
 		alias
-			"[
-				HANDLE h = CreateFileW ((LPCWSTR) $a_name, GENERIC_READ,
-					FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-					OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-				return (h == INVALID_HANDLE_VALUE) ? NULL : (EIF_POINTER) h;
-			]"
+			"return (EIF_POINTER) shf_open ((void *) $a_name);"
 		end
 
 	c_read (a_handle, a_buffer: POINTER; a_count: INTEGER): INTEGER
@@ -676,23 +671,17 @@ feature {NONE} -- Implementation: Win32 file reading
 			-- bytes read, 0 at end of file, -1 on error.
 			-- Blocking: a read waits on I/O.
 		external
-			"C blocking inline use <windows.h>"
+			"C blocking inline use %"simple_hash_file.h%""
 		alias
-			"[
-				DWORD got = 0;
-				if (!ReadFile ((HANDLE) $a_handle, (LPVOID) $a_buffer, (DWORD) $a_count, &got, NULL)) {
-					return -1;
-				}
-				return (EIF_INTEGER) got;
-			]"
+			"return (EIF_INTEGER) shf_read ((void *) $a_handle, (void *) $a_buffer, (int) $a_count);"
 		end
 
 	c_close (a_handle: POINTER)
 			-- Close `a_handle'.
 		external
-			"C inline use <windows.h>"
+			"C inline use %"simple_hash_file.h%""
 		alias
-			"CloseHandle ((HANDLE) $a_handle);"
+			"shf_close ((void *) $a_handle);"
 		end
 
 feature {NONE} -- Implementation: Byte conversion
